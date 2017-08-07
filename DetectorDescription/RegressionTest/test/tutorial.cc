@@ -15,8 +15,8 @@
 
 #include "CLHEP/Units/GlobalSystemOfUnits.h"
 #include "CLHEP/Units/SystemOfUnits.h"
-#include "DetectorDescription/Base/interface/DDRotationMatrix.h"
-#include "DetectorDescription/Base/interface/DDTranslation.h"
+#include "DetectorDescription/Core/interface/DDRotationMatrix.h"
+#include "DetectorDescription/Core/interface/DDTranslation.h"
 #include "DetectorDescription/Core/interface/DDCompactView.h"
 #include "DetectorDescription/Core/interface/DDEnums.h"
 #include "DetectorDescription/Core/interface/DDExpandedNode.h"
@@ -35,9 +35,8 @@
 #include "DetectorDescription/Core/interface/DDTransform.h"
 #include "DetectorDescription/Core/interface/DDValue.h"
 #include "DetectorDescription/Core/interface/DDsvalues.h"
-#include "DetectorDescription/Core/interface/adjgraph.h"
-#include "DetectorDescription/ExprAlgo/interface/ClhepEvaluator.h"
-#include "DetectorDescription/ExprAlgo/interface/ExprEvalSingleton.h"
+#include "DataFormats/Math/interface/Graph.h"
+#include "DetectorDescription/Core/interface/ClhepEvaluator.h"
 #include "FWCore/Utilities/interface/Exception.h"
 #include "Math/GenVector/Cartesian3D.h"
 #include "Math/GenVector/DisplacementVector3D.h"
@@ -49,9 +48,9 @@ namespace {
     GroupFilter(std::vector< DDSpecificsFilter* >& filters):
       filters_(filters) {}
 
-    bool accept(const DDExpandedView &cv ) const override final {
+    bool accept(const DDExpandedView &cv ) const final {
       bool returnValue = true;
-      for(auto f: filters_) {
+      for(const auto & f : filters_) {
         returnValue = returnValue and f->accept(cv);
         if(not returnValue) {
           break;
@@ -371,7 +370,7 @@ void tutorial()
       
 	double dv = 0.;
 	try {
-	  dv = ExprEvalSingleton::instance().eval("",v);
+	  dv = DDI::Singleton<ClhepEvaluator>::instance().eval("",v);
 	}
 	catch (const cms::Exception & e) {
 	  dv = 0;
@@ -505,10 +504,10 @@ void tutorial()
 	case 's':
 	  fv.print();
 	  std::cout << std::endl <<"specifics sets = " << v.size() << ":" << std::endl;
-	  for (spectype::size_type o=0;o<v.size();++o) {
-	    std::cout << *(v[o].first) 
+	  for (const auto & o : v) {
+	    std::cout << *(o.first) 
 		      << " = " 
-		      << *(v[o].second) 
+		      << *(o.second) 
 		      << std::endl;// << std::endl;
 	  }
 	  std::cout << std::endl;
@@ -516,8 +515,8 @@ void tutorial()
 	  std::cout << merged << std::endl;
 	 
 	  std::cout << "specifics only at logicalPart:" << std::endl;
-	  for (std::vector<const DDsvalues_type *>::size_type o=0;o<only.size();++o) {
-	    std::cout << *(only[o]) << std::endl;
+	  for (const auto & o : only) {
+	    std::cout << *o << std::endl;
 	  }
 	  std::cout << std::endl;	 
 	  std::cout << "translation: " << fv.translation() << std::endl;

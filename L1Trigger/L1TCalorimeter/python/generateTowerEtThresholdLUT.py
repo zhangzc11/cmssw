@@ -26,8 +26,8 @@ if not os.path.isdir(os.environ['LOCALRT'] + "/src/L1Trigger/L1TCalorimeter/data
           "Remember to do 'git add " + os.environ['LOCALRT'] + "L1Trigger/L1TCalorimeter/data' when committing the new LUT!")
     os.makedirs(os.environ['LOCALRT'] + "/src/L1Trigger/L1TCalorimeter/data")
 
-print "Creating tower Et threshold LUT with filename " + os.environ['LOCALRT'] + "/src/L1Trigger/L1TCalorimeter/data/lut_towEtThresh_2017v3.txt'"
-towEtThreshLUTFile = open(os.environ['LOCALRT']+"/src/L1Trigger/L1TCalorimeter/data/lut_towEtThresh_2017v3.txt", "w")
+print "Creating tower Et threshold LUT with filename " + os.environ['LOCALRT'] + "/src/L1Trigger/L1TCalorimeter/data/lut_towEtThresh_2017v6.txt'"
+towEtThreshLUTFile = open(os.environ['LOCALRT']+"/src/L1Trigger/L1TCalorimeter/data/lut_towEtThresh_2017v6.txt", "w")
 
 
 # write header info
@@ -44,31 +44,36 @@ towEtThreshLUTFile.write(
 )
 
 # vector of calo tower areas, relative to central barrel areas (0.087 in eta)
-# excludes ieta=0 and ieta=29, since they don't physically exist!
+# dummy for ieta=0 and excludes ieta=29, since they don't physically exist!
 
-towerAreas = [1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,
+towerAreas = [0.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,
                   1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,
                   1.03,1.15,1.3,1.48,1.72,2.05,1.72,4.02,
                   3.29,2.01,2.02,2.01,2.02,2.0,2.03,1.99,2.02,2.04,2.00,3.47];
   
-etaRange = xrange(1,41) # 30 towers: skip 1-10. Do not count ieta=29, so count up to ieta = 40
+etaRange = xrange(0,41) # dummy entry for ieta=0, do not count ieta=29, so count 40 towers
 compNTT4Range = xrange(0,32) #  use compressed pileup estimate from EG LUT
 addr = 0
 printBins = ""
 
 for compNTT4 in compNTT4Range:
     for ieta in etaRange:
-        towEtThresh = int(round((float(towerAreas[ieta-1])**1.2)*(1/(1+math.exp(-0.2*(ieta-5))))*(float(compNTT4)/10)))
+        if compNTT4 < 16:
+            towEtThresh = int(round(pow(float(towerAreas[ieta]),1.4)*(1/(1+math.exp(-0.07*(ieta))))*(pow(float(compNTT4),2)/100)))
+        else:
+            towEtThresh = int(round(pow(float(towerAreas[ieta]),1.4)*(1/(1+math.exp(-0.07*(ieta))))*(pow(float(16),2)/100)))
         if ieta > 28:
-            towEtThresh -= 4
-        if towEtThresh > 16:
-            towEtThresh = int(16)
+            towEtThresh -= 2
+        if towEtThresh > 12:
+            towEtThresh = int(12)
         if ieta < 13 or towEtThresh < 0:
             towEtThresh = 0
         if (addr % 64) == 0:
             printBins = "             # nTT4 = " + str(5*compNTT4) + "-" + str((5*compNTT4)+5) + " ieta = " + str(ieta)  
+        elif ieta>28:
+            printBins = "             # ieta = " + str(ieta+1)
         else:
-            printBins = ""
+            printBins = "             # ieta = " + str(ieta)
         towEtThreshLUTFile.write(
             str(addr) + " " + 
             str(towEtThresh) +
@@ -78,7 +83,7 @@ for compNTT4 in compNTT4Range:
         addr+=1
     if ieta == 40: # dummy to fill 6 bits for eta
         extraCount = 0
-        while extraCount < 24:
+        while extraCount < 23:
             towEtThreshLUTFile.write(
                 str(addr) + " " + 
                 str(0) + 

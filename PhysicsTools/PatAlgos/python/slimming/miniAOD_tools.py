@@ -92,12 +92,15 @@ def miniAOD_customizeCommon(process):
                 PhotonCutBasedIDTight = cms.InputTag('reducedEgamma',
                                                       'PhotonCutBasedIDTight')
               )
-
+    
     process.phPFIsoDepositChargedPAT.src = cms.InputTag("reducedEgamma","reducedGedPhotons")
     process.phPFIsoDepositChargedAllPAT.src = cms.InputTag("reducedEgamma","reducedGedPhotons")
     process.phPFIsoDepositNeutralPAT.src = cms.InputTag("reducedEgamma","reducedGedPhotons")
     process.phPFIsoDepositGammaPAT.src = cms.InputTag("reducedEgamma","reducedGedPhotons")
     process.phPFIsoDepositPUPAT.src = cms.InputTag("reducedEgamma","reducedGedPhotons")
+    #
+    process.patOOTPhotons.photonSource = cms.InputTag("reducedEgamma","reducedOOTPhotons")
+    process.patOOTPhotons.electronSource = cms.InputTag("reducedEgamma","reducedGedGsfElectrons")
     #
     process.selectedPatJets.cut = cms.string("pt > 10")
     process.selectedPatMuons.cut = cms.string("pt > 5 || isPFMuon || (pt > 3 && (isGlobalMuon || isStandAloneMuon || numberOfMatches > 0 || muonID('RPCMuLoose')))")
@@ -231,8 +234,15 @@ def miniAOD_customizeCommon(process):
     photon_ids = ['RecoEgamma.PhotonIdentification.Identification.cutBasedPhotonID_Spring15_25ns_V1_cff',
                   'RecoEgamma.PhotonIdentification.Identification.cutBasedPhotonID_Spring15_50ns_V1_cff',
                   'RecoEgamma.PhotonIdentification.Identification.mvaPhotonID_Spring15_25ns_nonTrig_V2p1_cff',
-                  'RecoEgamma.PhotonIdentification.Identification.mvaPhotonID_Spring15_50ns_nonTrig_V2p1_cff']
-    switchOnVIDPhotonIdProducer(process,DataFormat.MiniAOD, task)
+                  'RecoEgamma.PhotonIdentification.Identification.mvaPhotonID_Spring15_50ns_nonTrig_V2p1_cff',
+                  'RecoEgamma.PhotonIdentification.Identification.cutBasedPhotonID_Spring16_V2p2_cff',
+                  'RecoEgamma.PhotonIdentification.Identification.mvaPhotonID_Spring16_nonTrig_V1_cff']
+    switchOnVIDPhotonIdProducer(process,DataFormat.AOD, task) 
+    process.egmPhotonIsolation.srcToIsolate = \
+        cms.InputTag("reducedEgamma","reducedGedPhotons")  
+    for iPSet in process.egmPhotonIsolation.isolationConeDefinitions:
+        iPSet.particleBasedIsolation = cms.InputTag("reducedEgamma","reducedPhotonPfCandMap")    
+
     process.egmPhotonIDs.physicsObjectSrc = \
         cms.InputTag("reducedEgamma","reducedGedPhotons")
     process.photonIDValueMapProducer.src = \
@@ -258,7 +268,6 @@ def miniAOD_customizeCommon(process):
         task.add(process.ak4PFJets)
         task.add(process.ak4PFJetsPuppi)
     process.ak4PFJetsPuppi.doAreaFastjet = True # even for standard ak4PFJets this is overwritten in RecoJets/Configuration/python/RecoPFJets_cff
-
     from RecoJets.JetAssociationProducers.j2tParametersVX_cfi import j2tParametersVX
     process.ak4PFJetsPuppiTracksAssociatorAtVertex = cms.EDProducer("JetTracksAssociatorAtVertex",
         j2tParametersVX,
@@ -319,6 +328,8 @@ def miniAOD_customizeCommon(process):
     process.slimmedMETsPuppi.tXYUncForT01Smear = cms.InputTag("patPFMetT0pcT1SmearTxyPuppi")
     del process.slimmedMETsPuppi.caloMET
 
+    # add DetIdAssociatorRecords to EventSetup (for isolatedTracks)
+    process.load("TrackingTools.TrackAssociator.DetIdAssociatorESProducer_cff")
 
 
 def miniAOD_customizeMC(process):
@@ -332,6 +343,8 @@ def miniAOD_customizeMC(process):
     process.electronMatch.src = cms.InputTag("reducedEgamma","reducedGedGsfElectrons")
     process.photonMatch.matched = "prunedGenParticles"
     process.photonMatch.src = cms.InputTag("reducedEgamma","reducedGedPhotons")
+    process.ootPhotonMatch.matched = "prunedGenParticles"
+    process.ootPhotonMatch.src = cms.InputTag("reducedEgamma","reducedOOTPhotons")
     process.tauMatch.matched = "prunedGenParticles"
     process.tauGenJets.GenParticles = "prunedGenParticles"
     #Boosted taus 
@@ -345,6 +358,7 @@ def miniAOD_customizeMC(process):
     process.patMuons.embedGenMatch = False
     process.patElectrons.embedGenMatch = False
     process.patPhotons.embedGenMatch = False
+    process.patOOTPhotons.embedGenMatch = False
     process.patTaus.embedGenMatch = False
     process.patTausBoosted.embedGenMatch = False
     process.patJets.embedGenPartonMatch = False
@@ -360,7 +374,7 @@ def miniAOD_customizeOutput(out):
 def miniAOD_customizeData(process):
     from PhysicsTools.PatAlgos.tools.coreTools import runOnData
     runOnData( process, outputModules = [] )
-    process.load("RecoCTPPS.TotemRPLocal.ctppsLocalTrackLiteProducer_cfi")
+    process.load("RecoCTPPS.TotemRPLocal.ctppsLocalTrackLiteProducer_cff")
     task = getPatAlgosToolsTask(process)
     task.add(process.ctppsLocalTrackLiteProducer)
 

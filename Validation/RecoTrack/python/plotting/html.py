@@ -43,18 +43,22 @@ _sampleFileName = {
 _allTPEfficName = "All tracks (all TPs)"
 _fromPVName = "Tracks from PV"
 _fromPVAllTPName = "Tracks from PV (all TPs)"
+_tpPtLess09Name = "All tracks (TP pT &lt; 0.9 GeV)"
 _conversionName = "Tracks for conversions"
 _gsfName = "Electron GSF tracks"
 def _toHP(s):
     return "High purity "+_lowerFirst(s)
 def _allToHP(s):
     return s.replace("All", "High purity")
+def _byOriginalAlgo(s):
+    return s.replace("tracks", "tracks by originalAlgo")
 def _ptCut(s):
     return s.replace("Tracks", "Tracks pT &gt; 0.9 GeV").replace("tracks", "tracks pT &gt; 0.9 GeV")
 _trackQualityNameOrder = collections.OrderedDict([
     ("seeding_seeds", "Seeds"),
     ("seeding_seedsa", "Seeds A"),
     ("seeding_seedsb", "Seeds B"),
+    ("seeding_seedsc", "Seeds C"),
     ("seeding_seedstripl", "Seeds triplets"),
     ("seeding_seedspair", "Seeds pairs"),
     ("building_", "Built tracks"),
@@ -66,6 +70,10 @@ _trackQualityNameOrder = collections.OrderedDict([
     ("highPurityByOriginalAlgo", "High purity tracks by originalAlgo"),
     ("ByAlgoMask", "All tracks by algoMask"),
     ("highPurityByAlgoMask", "High purity tracks by algoMask"),
+    ("tpPtLess09_", _tpPtLess09Name),
+    ("tpPtLess09_highPurity", _allToHP(_tpPtLess09Name)),
+    ("tpPtLess09_ByOriginalAlgo", _byOriginalAlgo(_tpPtLess09Name)),
+    ("tpPtLess09_highPurityByOriginalAlgo", _byOriginalAlgo(_allToHP(_tpPtLess09Name))),
     ("btvLike", "BTV-like"),
     ("ak4PFJets", "AK4 PF jets"),
     ("allTPEffic_", _allTPEfficName),
@@ -149,10 +157,12 @@ _sectionNameMapOrder = collections.OrderedDict([
     ("building", "Built tracks"),
     ("", "All tracks"),
     ("highPurity", "High purity tracks"),
+    ("tpPtLess09", _tpPtLess09Name),
+    ("tpPtLess09_highPurity", _allToHP(_tpPtLess09Name)),
     ("btvLike", "BTV-like"),
     ("ak4PFJets", "AK4 PF jets"),
     ("allTPEffic", _allTPEfficName),
-    ("allTPEffic_highPurity", _allTPEfficName.replace("All", "High purity")),
+    ("allTPEffic_highPurity", _allToHP(_allTPEfficName)),
     ("fromPV", _fromPVName),
     ("fromPV_highPurity", "High purity "+_lowerFirst(_fromPVName)),
     ("fromPVAllTP", _fromPVAllTPName),
@@ -460,7 +470,7 @@ class Page(object):
         for section in _sectionNameMapOrder.keys():
             if section in keys_sorted:
                 ret.append(section)
-                keys.remove(section)
+                keys_sorted.remove(section)
         ret.extend(keys_sorted)
         return ret
 
