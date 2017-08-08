@@ -4,10 +4,12 @@ MicroEventContent = cms.PSet(
     outputCommands = cms.untracked.vstring(
         'drop *',
         'keep *_slimmedPhotons_*_*',
+        'keep *_slimmedOOTPhotons_*_*',
         'keep *_slimmedElectrons_*_*',
         'keep *_slimmedMuons_*_*',
         'keep *_slimmedTaus_*_*',
         'keep *_slimmedTausBoosted_*_*',
+        'keep *_slimmedCaloJets_*_*',
         'keep *_slimmedJets_*_*',
         'keep *_slimmedJetsAK8_*_*',
         'keep *_slimmedJetsPuppi_*_*',
@@ -33,6 +35,7 @@ MicroEventContent = cms.PSet(
         'keep *_offlineBeamSpot_*_*',
         'keep *_offlineSlimmedPrimaryVertices_*_*',
         'keep patPackedCandidates_packedPFCandidates_*_*',
+        'keep *_isolatedTracks_*_*',
         # low energy conversions for BPH
         'keep *_oniaPhotonCandidates_*_*',
 
@@ -46,7 +49,7 @@ MicroEventContent = cms.PSet(
         'keep double_fixedGridRhoFastjetCentralChargedPileUp__*',
         'keep double_fixedGridRhoFastjetCentralNeutral__*',
 
-        'keep *_selectedPatTrigger_*_*',
+        'keep *_slimmedPatTrigger_*_*',
         'keep patPackedTriggerPrescales_patTrigger__*',
         'keep patPackedTriggerPrescales_patTrigger_l1max_*',
         'keep patPackedTriggerPrescales_patTrigger_l1min_*',

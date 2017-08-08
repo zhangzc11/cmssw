@@ -4,9 +4,9 @@ namespace std { } using namespace std;
 
 #include <fstream>
 
-#include "DetectorDescription/Base/interface/Store.h"
+#include "DetectorDescription/Core/interface/Store.h"
 //***** Explicit template instantiation of Singleton
-#include "DetectorDescription/Base/interface/Singleton.icc"
+#include "DetectorDescription/Core/interface/Singleton.icc"
 #include "DetectorDescription/Core/interface/DDBase.h"
 #include "DetectorDescription/Core/interface/DDCompactView.h"
 #include "DetectorDescription/Core/interface/DDLogicalPart.h"
@@ -16,8 +16,8 @@ namespace std { } using namespace std;
 #include "DetectorDescription/Core/interface/DDSolidShapes.h"
 #include "DetectorDescription/Core/interface/DDSpecifics.h"
 #include "DetectorDescription/Core/interface/DDTransform.h"
-#include "DetectorDescription/Core/interface/adjgraph.h"
-#include "DetectorDescription/Core/interface/graphwalker.h"
+#include "DataFormats/Math/interface/Graph.h"
+#include "DataFormats/Math/interface/GraphWalker.h"
 #include "DetectorDescription/Core/src/DDCheck.h"
 //**** to get rid of compile errors about ambiguous delete of Stores
 #include "DetectorDescription/Core/src/LogicalPart.h"
@@ -198,8 +198,8 @@ const std::map<DDSolid,std::set<DDSolid> > & DDErrorDetection::so()
   if (result_.size()) return result_;
  
   // build the material dependency graph
-  typedef graph<DDSolid,double> ma_graph_t;
-  typedef graphwalker<DDSolid,double> ma_walker_t;
+  using ma_graph_t = math::Graph<DDSolid,double>;
+  using ma_walker_t = math::GraphWalker<DDSolid,double>;
     
   ma_graph_t mag;
   std::vector<DDSolid> errs;
