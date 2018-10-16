@@ -29,7 +29,7 @@ mvaTag = "Run2Spring15NonTrig50nsV0"
 
 mvaSpring15NonTrigWeightFiles_V0 = cms.vstring(
     path.join(weightFileBaseDir, "Spring15/50ns_EB_V0.weights.xml.gz"),
-    path.join(weightFileBaseDir, "Spring15/50ns_EB_V0.weights.xml.gz"),
+    path.join(weightFileBaseDir, "Spring15/50ns_EE_V0.weights.xml.gz"),
     )
 
 # Load some common definitions for MVA machinery
