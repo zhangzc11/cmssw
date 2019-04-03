@@ -1,0 +1,16 @@
+# This file contains Effective Area constants for 
+# computing pile-up corrections for the tracker isolation
+# for a photon object.
+#
+#  The constants are based on 90% contours of isolation.
+# These effective areas are also found on the following slides:
+#      https://indico.cern.ch/event/809641/
+#
+# |eta| min   |eta| max   effective area
+0.0000         0.8000     0.2304
+0.8000         1.4790     0.1969
+1.4790         2.0000     0.0306
+2.0000         2.2000     0.0283
+2.2000         2.3000     0.0254
+2.3000         2.4000     0.0217
+2.4000         5.0000     0.0167

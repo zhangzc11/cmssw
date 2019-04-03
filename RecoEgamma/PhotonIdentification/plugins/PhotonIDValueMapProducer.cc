@@ -18,7 +18,8 @@
 #include "DataFormats/PatCandidates/interface/PackedCandidate.h"
 
 #include "RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h"
-
+#include "RecoEcal/EgammaCoreTools/interface/EcalClusterTools.h"
+#include "RecoEcal/EgammaCoreTools/interface/EcalTools.h"
 #include <memory>
 #include <vector>
 
@@ -84,6 +85,7 @@ class PhotonIDValueMapProducer : public edm::stream::EDProducer<> {
 
   // The object that will compute 5x5 quantities  
   std::unique_ptr<noZS::EcalClusterLazyTools> lazyToolnoZS;
+  std::unique_ptr<noZS::EcalClusterTools> toolnoZS;
 
   // for AOD case
   edm::EDGetTokenT<EcalRecHitCollection> ebReducedRecHitCollection_;
@@ -114,10 +116,6 @@ class PhotonIDValueMapProducer : public edm::stream::EDProducer<> {
   constexpr static char phoFull5x5E2x5Max_[] = "phoFull5x5E2x5Max";
   constexpr static char phoFull5x5E5x5_[] = "phoFull5x5E5x5";
   constexpr static char phoESEffSigmaRR_[] = "phoESEffSigmaRR";
-  // Cluster shape ratios
-  constexpr static char phoFull5x5E1x3byE5x5_[] = "phoFull5x5E1x3byE5x5";
-  constexpr static char phoFull5x5E2x2byE5x5_[] = "phoFull5x5E2x2byE5x5";
-  constexpr static char phoFull5x5E2x5byE5x5_[] = "phoFull5x5E2x5byE5x5";
   // Isolations
   constexpr static char phoChargedIsolation_[] = "phoChargedIsolation";
   constexpr static char phoNeutralHadronIsolation_[] = "phoNeutralHadronIsolation";
@@ -131,7 +129,10 @@ class PhotonIDValueMapProducer : public edm::stream::EDProducer<> {
   constexpr static char phoTrkIsolation_[] = "phoTrkIsolation";
   constexpr static char phoHcalPFClIsolation_[] = "phoHcalPFClIsolation";
   constexpr static char phoEcalPFClIsolation_[] = "phoEcalPFClIsolation";
-
+  //
+  constexpr static char phoSmaj_[]="phoSmaj";
+  constexpr static char phoSmin_[]="phoSmin";
+  constexpr static char phoAlpha_[]="phoAlpha";
 };
 
 // Cluster shapes
@@ -142,10 +143,6 @@ constexpr char PhotonIDValueMapProducer::phoFull5x5E2x2_[];
 constexpr char PhotonIDValueMapProducer::phoFull5x5E2x5Max_[];
 constexpr char PhotonIDValueMapProducer::phoFull5x5E5x5_[];
 constexpr char PhotonIDValueMapProducer::phoESEffSigmaRR_[];
-// Cluster shape ratios
-constexpr char PhotonIDValueMapProducer::phoFull5x5E1x3byE5x5_[];
-constexpr char PhotonIDValueMapProducer::phoFull5x5E2x2byE5x5_[];
-constexpr char PhotonIDValueMapProducer::phoFull5x5E2x5byE5x5_[];
 // Isolations
 constexpr char PhotonIDValueMapProducer::phoChargedIsolation_[];
 constexpr char PhotonIDValueMapProducer::phoNeutralHadronIsolation_[];
@@ -160,6 +157,10 @@ constexpr char PhotonIDValueMapProducer::phoTrkIsolation_[];
 constexpr char PhotonIDValueMapProducer::phoHcalPFClIsolation_[];
 constexpr char PhotonIDValueMapProducer::phoEcalPFClIsolation_[];
 
+//smaj and smin
+constexpr char PhotonIDValueMapProducer::phoSmaj_[];
+constexpr char PhotonIDValueMapProducer::phoSmin_[];
+constexpr char PhotonIDValueMapProducer::phoAlpha_[];
 
 PhotonIDValueMapProducer::PhotonIDValueMapProducer(const edm::ParameterSet& iConfig) {
 
@@ -206,6 +207,8 @@ PhotonIDValueMapProducer::PhotonIDValueMapProducer(const edm::ParameterSet& iCon
   pfCandidatesToken_        = mayConsume< edm::View<reco::Candidate> >(iConfig.getParameter<edm::InputTag>("pfCandidates")); 
   pfCandidatesTokenMiniAOD_ = mayConsume< edm::View<reco::Candidate> >(iConfig.getParameter<edm::InputTag>("pfCandidatesMiniAOD")); 
 
+
+  
   //
   // Declare producibles
   //
@@ -217,10 +220,6 @@ PhotonIDValueMapProducer::PhotonIDValueMapProducer(const edm::ParameterSet& iCon
   produces<edm::ValueMap<float> >(phoFull5x5E2x5Max_);  
   produces<edm::ValueMap<float> >(phoFull5x5E5x5_);  
   produces<edm::ValueMap<float> >(phoESEffSigmaRR_);  
-  // Cluster shape ratios
-  produces<edm::ValueMap<float> >(phoFull5x5E1x3byE5x5_);
-  produces<edm::ValueMap<float> >(phoFull5x5E2x2byE5x5_);
-  produces<edm::ValueMap<float> >(phoFull5x5E2x5byE5x5_);
   // Isolations
   produces<edm::ValueMap<float> >(phoChargedIsolation_);  
   produces<edm::ValueMap<float> >(phoNeutralHadronIsolation_);  
@@ -235,10 +234,13 @@ PhotonIDValueMapProducer::PhotonIDValueMapProducer(const edm::ParameterSet& iCon
   produces<edm::ValueMap<float> >(phoHcalPFClIsolation_);  
   produces<edm::ValueMap<float> >(phoEcalPFClIsolation_);  
 
-
+  //smaj and smin
+  produces<edm::ValueMap<float> >(phoSmaj_);
+  produces<edm::ValueMap<float> >(phoSmin_);
+  produces<edm::ValueMap<float> >(phoAlpha_);
 }
 
-PhotonIDValueMapProducer::~PhotonIDValueMapProducer() {
+PhotonIDValueMapProducer::~PhotonIDValueMapProducer()  {
 }
 
 void PhotonIDValueMapProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
@@ -285,8 +287,19 @@ void PhotonIDValueMapProducer::produce(edm::Event& iEvent, const edm::EventSetup
                                                       ebReducedRecHitCollectionMiniAOD_,
                                                       eeReducedRecHitCollectionMiniAOD_); 
 
+  } 
+
+
+  edm::Handle<EcalRecHitCollection>      rechitsEB_ ;
+  edm::Handle<EcalRecHitCollection>      rechitsEE_ ;
+  if(isAOD) { 
+    iEvent.getByToken( ebReducedRecHitCollection_, rechitsEB_ );
+    iEvent.getByToken( eeReducedRecHitCollection_, rechitsEE_ );
+    } else  {  
+    iEvent.getByToken( ebReducedRecHitCollectionMiniAOD_, rechitsEB_ );
+    iEvent.getByToken( eeReducedRecHitCollectionMiniAOD_, rechitsEE_ );
   }
-  
+
   // Get PV
   edm::Handle<reco::VertexCollection> vertices;
   iEvent.getByToken(vtxToken_, vertices);
@@ -324,10 +337,6 @@ void PhotonIDValueMapProducer::produce(edm::Event& iEvent, const edm::EventSetup
   std::vector<float> phoFull5x5E2x5Max;
   std::vector<float> phoFull5x5E5x5;
   std::vector<float> phoESEffSigmaRR;
-  // Cluster shape ratios
-  std::vector<float> phoFull5x5E1x3byE5x5;
-  std::vector<float> phoFull5x5E2x2byE5x5;
-  std::vector<float> phoFull5x5E2x5byE5x5;
   // Isolations
   std::vector<float> phoChargedIsolation;
   std::vector<float> phoNeutralHadronIsolation;
@@ -337,6 +346,10 @@ void PhotonIDValueMapProducer::produce(edm::Event& iEvent, const edm::EventSetup
   std::vector<float> phoWorstChargedIsolationWithPVConstraint;
   std::vector<float> phoWorstChargedIsolationWithConeVetoWithPVConstraint;
 
+  ///smaj and smin
+  std::vector<float> phoSmaj;
+  std::vector<float> phoSmin;
+  std::vector<float> phoAlpha;
   //PFCluster Isolations
   std::vector<float> phoTrkIsolation;
   std::vector<float> phoHcalPFClIsolation;
@@ -367,11 +380,30 @@ void PhotonIDValueMapProducer::produce(edm::Event& iEvent, const edm::EventSetup
     phoFull5x5E2x5Max.push_back(lazyToolnoZS-> e2x5Max(theseed) );
     phoFull5x5E5x5   .push_back(lazyToolnoZS-> e5x5   (theseed) );
 
-    phoFull5x5E1x3byE5x5.push_back(phoFull5x5E1x3[idxpho]/phoFull5x5E5x5[idxpho]);
-    phoFull5x5E2x2byE5x5.push_back(phoFull5x5E2x2[idxpho]/phoFull5x5E5x5[idxpho]);
-    phoFull5x5E2x5byE5x5.push_back(phoFull5x5E2x5Max[idxpho]/phoFull5x5E5x5[idxpho]);
-
     phoESEffSigmaRR  .push_back(lazyToolnoZS->eseffsirir( *(iPho->superCluster()) ) );
+
+
+    //compute cluster shapes 2nd moments: smaj and smin
+    const bool isEB = (theseed.seed().subdetId() == EcalBarrel); // which subdet
+    const EcalRecHitCollection* rechits = ( isEB ) ? rechitsEB_.product() : rechitsEE_.product() ;
+    
+    //    std::cout<<" # rechits: "<<rechits->size()<<std::endl;
+    if (rechits->size() > 0)
+      {
+	Cluster2ndMoments ph2ndMoments =  EcalClusterTools::cluster2ndMoments(theseed,*rechits);
+	//	std::cout<< "smaj: "<< ph2ndMoments.sMaj<<std::endl;
+	phoSmaj.push_back(ph2ndMoments.sMaj);
+	phoSmin.push_back(ph2ndMoments.sMin);
+	phoAlpha.push_back(ph2ndMoments.alpha);
+	//	std::cout<<"smaj: "<<ph2ndMoments.sMaj<<std::endl;
+      }else{
+      //      std::cout<< "smaj: "<< 999<<std::endl;
+      phoSmaj.push_back(999.);
+      phoSmin.push_back(999.);
+      phoAlpha.push_back(999.);
+
+    }
+	
 
     // 
     // Compute absolute uncorrected isolations with footprint removal
@@ -383,7 +415,7 @@ void PhotonIDValueMapProducer::produce(edm::Event& iEvent, const edm::EventSetup
                                            iPho->superCluster()->z() - pv.z());
 
     //PFCluster Isolations
-    phoTrkIsolation      .push_back( iPho->trkSumPtSolidConeDR04());
+    phoTrkIsolation      .push_back( iPho->trkSumPtHollowConeDR03());
     if (isAOD)                                                                                                                                                                  
       {                                                                                                                                                                          
 	phoHcalPFClIsolation .push_back(0.f);
@@ -521,10 +553,6 @@ void PhotonIDValueMapProducer::produce(edm::Event& iEvent, const edm::EventSetup
   writeValueMap(iEvent, src, phoFull5x5E2x5Max, phoFull5x5E2x5Max_);  
   writeValueMap(iEvent, src, phoFull5x5E5x5   , phoFull5x5E5x5_);  
   writeValueMap(iEvent, src, phoESEffSigmaRR  , phoESEffSigmaRR_);  
-  // Cluster shape ratios
-  writeValueMap(iEvent, src, phoFull5x5E1x3byE5x5   , phoFull5x5E1x3byE5x5_);  
-  writeValueMap(iEvent, src, phoFull5x5E2x2byE5x5   , phoFull5x5E2x2byE5x5_);  
-  writeValueMap(iEvent, src, phoFull5x5E2x5byE5x5   , phoFull5x5E2x5byE5x5_);  
   // Isolation
   writeValueMap(iEvent, src, phoChargedIsolation, phoChargedIsolation_);  
   writeValueMap(iEvent, src, phoNeutralHadronIsolation, phoNeutralHadronIsolation_);  
@@ -537,6 +565,11 @@ void PhotonIDValueMapProducer::produce(edm::Event& iEvent, const edm::EventSetup
   writeValueMap(iEvent, src, phoTrkIsolation, phoTrkIsolation_);  
   writeValueMap(iEvent, src, phoHcalPFClIsolation, phoHcalPFClIsolation_);  
   writeValueMap(iEvent, src, phoEcalPFClIsolation, phoEcalPFClIsolation_);  
+
+  //smaj and smin
+  writeValueMap(iEvent, src, phoSmaj, phoSmaj_);  
+  writeValueMap(iEvent, src, phoSmin, phoSmin_);  
+  writeValueMap(iEvent, src, phoAlpha, phoAlpha_);  
 
 }
 
@@ -684,3 +717,4 @@ void PhotonIDValueMapProducer::getImpactParameters(const edm::Ptr<reco::Candidat
 }
 
 DEFINE_FWK_MODULE(PhotonIDValueMapProducer);
+
